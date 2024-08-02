@@ -3,3 +3,5 @@ To run it with different colors add the first tree letters of the main ansi colo
 To get more info run the program with --help.
 
 To build it you will need zig(Duh!) and libc, then run zig build in the directory.
+
+![alt text](https://github.com/CaliOn2/zConway/tree/master/Pics/example.png?raw=true)
