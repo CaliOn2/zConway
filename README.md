@@ -4,4 +4,5 @@ To get more info run the program with --help.
 
 To build it you will need zig(Duh!) and libc, then run zig build in the directory.
 
-![Example Picture](https://github.com/CaliOn2/zConway/tree/master/Pics/example.png)
+![image](https://github.com/user-attachments/assets/ac91db2c-fda5-4911-bb94-e97447eb56c8)
+
