@@ -66,19 +66,16 @@ const gamefield = struct {
         }
     }
 
-    fn display(self: *gamefield, color: *const [8]u8) !void {
+    fn display(self: *gamefield) !void {
         const stdout = std.io.getStdOut().writer();
         const alive: *const [3]u8 = "█";
         const dead: *const [1]u8 = " ";
-        var displaybuffer: [400 * 80 * 8 * 3 + 9]u8 = undefined;
+        var displaybuffer: [400 * 80 * 8 * 3]u8 = undefined;
         var arrayOffset: u16 = 0;
         self.x = 0;
         self.y = 0;
         var ybit: u3 = 0;
         var ybyte: u8 = 0;
-        for (color.*, 0..) |_, i| {
-            displaybuffer[i] = color.*[i];
-        }
 
         while (self.x < self.screenx) : (self.x += 1) {
             self.y = 0;
@@ -158,7 +155,7 @@ pub fn main() !void {
     const screen_clear = csi ++ "2J";
     const screen_buf_on = csi ++ "?1049h"; //h=high
 
-    const term_on = screen_buf_on ++ cursor_hide ++ cursor_home ++ screen_clear ++ termCol ++ "\n";
+    const term_on = screen_buf_on ++ cursor_hide ++ cursor_home ++ screen_clear ++ termCol ++ termCol;
 
     var w: c.winsize = undefined;
     _ = c.ioctl(0, c.TIOCGWINSZ, &w);
@@ -196,7 +193,7 @@ pub fn main() !void {
         game.screeny = @min(w.ws_col, 80 * 8);
         game.screenx = @min(w.ws_row, 400);
         game.gameTick();
-        try game.display(termCol);
+        try game.display();
         std.time.sleep(100 * 1000 * 1000);
     }
 }
