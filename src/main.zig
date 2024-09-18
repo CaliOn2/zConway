@@ -110,44 +110,66 @@ pub fn close(_: c_int) callconv(.C) void {
     std.os.linux.exit(0);
 }
 
+pub fn argHandler(colorNumber: *[2]u8) !void {
+    if (1 < std.os.argv.len) {
+        const stdout = std.io.getStdOut().writer();
+
+        const val: [3]u8 = [3]u8{
+            std.os.argv[1][0],
+            std.os.argv[1][1],
+            std.os.argv[1][2],
+        };
+
+        if (std.mem.eql(u8, &val, "--h")) {
+            try stdout.print("This program displays a randomly generated field to simulate life by conway's game rules.\nChange colors by adding the first three letters of a color after the program.\n", .{});
+            std.os.linux.exit(0);
+        }
+
+        const argColor: [8]*const [3:0]u8 = [8]*const [3:0]u8{
+            "bla",
+            "red",
+            "gre",
+            "yel",
+            "blu",
+            "mag",
+            "cya",
+            "whi",
+        };
+
+        const ansiColor: [8]u8 = [8]u8{
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+        };
+
+        for (0..8) |x| {
+            if (std.mem.eql(u8, val[0..3], argColor[x])) {
+                colorNumber.*[0] = '3';
+                colorNumber.*[1] = ansiColor[x];
+                return;
+            }
+        }
+    }
+}
+
 pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
     const prng = std.crypto.random;
 
-    var termCol: *const [8]u8 = "\x1B[00m";
+    var colorNumber: [2]u8 = [2]u8{ '0', '0' }; // 92 is "/"
 
-    if (1 < std.os.argv.len) {
-        var val: [3]u8 = undefined;
-
-        for (0..3) |ind| {
-            val[ind] = std.os.argv[1][ind];
-        }
-
-        if (std.mem.eql(u8, &val, "bla")) {
-            termCol = "\x1B[30m";
-        } else if (std.mem.eql(u8, &val, "red")) {
-            termCol = "\x1B[31m";
-        } else if (std.mem.eql(u8, &val, "gre")) {
-            termCol = "\x1B[32m";
-        } else if (std.mem.eql(u8, &val, "yel")) {
-            termCol = "\x1B[33m";
-        } else if (std.mem.eql(u8, &val, "blu")) {
-            termCol = "\x1B[34m";
-        } else if (std.mem.eql(u8, &val, "mag")) {
-            termCol = "\x1B[35m";
-        } else if (std.mem.eql(u8, &val, "cya")) {
-            termCol = "\x1B[36m";
-        } else if (std.mem.eql(u8, &val, "whi")) {
-            termCol = "\x1B[37m";
-        } else if (std.mem.eql(u8, &val, "--h")) {
-            try stdout.print("This program displays a randomly generated field to simulate life by conway's game rules.\nChange colors by adding the first three letters of a color after the program.\n", .{});
-            std.os.linux.exit(0);
-        }
-    }
+    try argHandler(&colorNumber);
 
     //ansi escape codes
     const esc = "\x1B";
     const csi = esc ++ "[";
+
+    const terminalColor = csi ++ colorNumber ++ "m";
 
     const cursor_hide = csi ++ "?25l"; //l=low
     const cursor_home = csi ++ "1;1H"; //1,1
@@ -155,7 +177,9 @@ pub fn main() !void {
     const screen_clear = csi ++ "2J";
     const screen_buf_on = csi ++ "?1049h"; //h=high
 
-    const term_on = screen_buf_on ++ cursor_hide ++ cursor_home ++ screen_clear ++ termCol ++ termCol;
+    const term_on = screen_buf_on ++ cursor_hide ++ cursor_home ++ screen_clear ++ terminalColor;
+
+    try stdout.print("{s}", .{term_on});
 
     var w: c.winsize = undefined;
     _ = c.ioctl(0, c.TIOCGWINSZ, &w);
@@ -166,7 +190,6 @@ pub fn main() !void {
         .flags = 0,
     };
     _ = std.os.linux.sigaction(std.os.linux.SIG.INT, &sa, null);
-    try stdout.print("{s}", .{term_on});
 
     var game = gamefield{};
 
