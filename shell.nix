@@ -1,8 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
   pkgs.mkShell {
     nativeBuildInputs = with pkgs.buildPackages; [ 
-      zig
-      #zigStdenv
-
+      zig#_0_12
     ];
 }
